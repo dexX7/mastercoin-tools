@@ -16,7 +16,7 @@ import simplejson
 import sys
 import operator
 import time
-from msc_utils_bitcoin import *
+from msc_utils_parsing import *
 
 def main():
 
