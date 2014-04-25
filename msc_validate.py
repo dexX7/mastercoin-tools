@@ -29,9 +29,9 @@ fundraisers_metadata_dict={}
 #create dict of divisible/non smart_properties
 property_type_dict={}
 # invalidate tx due to "avoid changing history" issues
-invalidate_tx_list=['13fb62038d98ca4680c6295ba10d17b63c050ccde9c4cee7579fd2e148f25581', \
-                    '67d6302a45380289de0097afdae8d21a84b0a41221ca14319b3e4cdd8952a53b', \
-                    '8593540888247a9772fbe0fbcdd765df179779ae0c728e1fe83051f1bf0efe2f']
+#invalidate_tx_list=['13fb62038d98ca4680c6295ba10d17b63c050ccde9c4cee7579fd2e148f25581', \
+#                    '67d6302a45380289de0097afdae8d21a84b0a41221ca14319b3e4cdd8952a53b', \
+#                    '8593540888247a9772fbe0fbcdd765df179779ae0c728e1fe83051f1bf0efe2f']
 
 # prepare lists for mastercoin and test
 sorted_currency_tx_list={'Mastercoin':[],'Test Mastercoin':[]} # list 0 for mastercoins, list 1 for test mastercoins
@@ -1208,9 +1208,9 @@ def check_mastercoin_transaction(t, index=-1):
         else:
 
             # check history bugs (currently relevant for sell offer and accepts)
-            for tx_check in invalidate_tx_list:
-                if t['tx_hash'] == tx_check:
-                    mark_tx_invalid(t['tx_hash'], 'avoid changing history')
+            #for tx_check in invalidate_tx_list:
+            #    if t['tx_hash'] == tx_check:
+            #        mark_tx_invalid(t['tx_hash'], 'avoid changing history')
 
             # sell offer
             if t['tx_type_str']==transaction_type_dict['0014']:
@@ -1617,7 +1617,7 @@ def check_mastercoin_transaction(t, index=-1):
                         debug('property creation from '+t['from_address']+' '+t['tx_hash'])
 
                         ecosystem = int(t['ecosystem'])
-                        if ecosystem == 1 and int(t['block']) >= 297112:
+                        if ecosystem == 1 and int(t['block']) >= 297110:
 			    count=0
 			    for each in properties_dict.keys():
 				if int(each) > 2 and int(each) < 2147483647:

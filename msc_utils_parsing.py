@@ -54,7 +54,7 @@ def refreshCurrencyIDs():
     try:
         property_files = glob.glob('properties/*.json')
         for property_file in property_files:
-            currency_type_dict[ hex(int(str(property_file.split('.')[0].split('-')[1])))[2:] ] = 'Smart Property'
+            currency_type_dict[ hex(int(str(property_file.split('.')[0].split('-')[1])))[2:].rjust(8,"0") ] = 'Smart Property'
             #reverse_currency_type_dict['Smart Property'] = str(property_file.split('.')[0].split('-')[1])
     except Exception,e:
         error('error getting glob of properties',e)
