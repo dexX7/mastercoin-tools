@@ -54,7 +54,7 @@ def refreshCurrencyIDs():
     try:
         property_files = glob.glob('properties/*.json')
         for property_file in property_files:
-            currency_type_dict[ hex(int(str(property_file.split('.')[0].split('-')[1])))[2:] ] = 'Smart Property'
+            currency_type_dict[ hex(int(str(property_file.split('.')[0].split('-')[1])))[2:].rjust(8,"0") ] = 'Smart Property'
             #reverse_currency_type_dict['Smart Property'] = str(property_file.split('.')[0].split('-')[1])
     except Exception,e:
         error('error getting glob of properties',e)
@@ -327,6 +327,9 @@ def parse_multisig(tx, tx_hash='unknown'):
     for o in dust_outputs: # assume the only other dust is to recipient
         if o['address']!=exodus_address:
             to_address=o['address']
+           if to_address[0] == '3': #P2SH
+                info('P2SH not implemented, see https://github.com/mastercoin-MSC/spec/issues/85, hash: '+tx_hash)
+                return {'tx_hash':tx_hash, 'invalid':(True, 'P2SH sending not supported')}
             continue
 
     data_script_list = []
