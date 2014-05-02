@@ -327,7 +327,7 @@ def parse_multisig(tx, tx_hash='unknown'):
     for o in dust_outputs: # assume the only other dust is to recipient
         if o['address']!=exodus_address:
             to_address=o['address']
-           if to_address[0] == '3': #P2SH
+            if to_address[0] == '3': #P2SH
                 info('P2SH not implemented, see https://github.com/mastercoin-MSC/spec/issues/85, hash: '+tx_hash)
                 return {'tx_hash':tx_hash, 'invalid':(True, 'P2SH sending not supported')}
             continue
