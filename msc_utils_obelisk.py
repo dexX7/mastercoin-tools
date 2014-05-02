@@ -168,6 +168,25 @@ def get_address_from_output(tx_and_number):
     output=all_outputs[number]
     return output['address']
 
+def get_vout_from_output(tx_and_number):
+    try:
+        txid=tx_and_number.split(':')[0]
+        number=int(tx_and_number.split(':')[1])
+    except IndexError:
+        return None
+    rawtx=get_raw_tx(txid)
+    json_tx=get_json_tx(rawtx)
+    if json_tx == None:
+        info(['failed getting json_tx (None) for '+txid,e])
+        return None
+    try:
+        all_outputs=json_tx['outputs']
+    except TypeError: # obelisk can give None
+        info('bad outputs parsing on: '+json_tx)
+        return None
+    output=all_outputs[number]
+    return output
+
 def get_pubkey(addr):
     out, err = run_command("sx get-pubkey "+addr)
     if err != None:
