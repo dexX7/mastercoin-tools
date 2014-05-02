@@ -173,11 +173,12 @@ def get_vout_from_output(tx_and_number):
         txid=tx_and_number.split(':')[0]
         number=int(tx_and_number.split(':')[1])
     except IndexError:
+        info('index error')
         return None
     rawtx=get_raw_tx(txid)
     json_tx=get_json_tx(rawtx)
     if json_tx == None:
-        info(['failed getting json_tx (None) for '+txid,e])
+        info('failed getting json_tx (None) for '+txid)
         return None
     try:
         all_outputs=json_tx['outputs']
