@@ -285,12 +285,10 @@ def select_input_reference(inputs):
     for i in inputs:
         prev_output=get_vout_from_output(i['previous_output'])
         # skip, if input is not usable
-        if prev_output == None:
+        if prev_output==None:
             continue
         # skip, if input is not pay-to-pubkey-hash
-        s=prev_output['script']
-        is_paytopubkeyhash=s.startswith('dup hash160') and s.endswith('equalverify checksig')
-        if not is_paytopubkeyhash:
+        if not is_paytopubkeyhash_output(prev_output):
             continue
         input_value=prev_output['value']
         input_address=i['address']
@@ -304,6 +302,27 @@ def select_input_reference(inputs):
     # the intput reference is the one with the highest value
     from_address=max(inputs_values_dict, key=inputs_values_dict.get)
     return from_address
+
+def select_receiver_reference(input_addr, outputs):
+    to_address='unknown'
+    sender_references=0    
+    # filter outputs to consider only pay-to-pubkey-hash outputs
+    potential_recipients=[]
+    for o in outputs:
+        if is_paytopubkeyhash_output(o):
+            address=o['address']
+            # count outputs to sender
+            if address==input_addr:
+                sender_references+=1
+            potential_recipients.append(address)
+    # recipient is last output, but first reference to sender may be skipped
+    remaining=len(potential_recipients)  
+    if remaining==1 or sender_references>1 or potential_recipients[-1]!=input_addr:
+        to_address=potential_recipients[-1]
+    # strip change output
+    elif remaining>1 and potential_recipients[-1]==input_addr:
+        to_address=potential_recipients[-2]
+    return to_address        
 
 def get_obfus_str_list(address, length):
        obfus_str_list=[]
@@ -339,16 +358,7 @@ def parse_multisig(tx, tx_hash='unknown'):
         info(str(invalid[1])+' on '+tx_hash)
         return {'tx_hash':tx_hash, 'invalid':invalid}
         
-    to_address='unknown'
-    skipped_once=False
-    num_outputs=len(outputs_list_no_exodus)
-    for o in outputs_list_no_exodus: # recipient is not exodus
-        if o['address']!=None:
-            # first output to sender may be change
-            if not skipped_once and o==input_addr and num_outputs>1:
-                skipped_once=True
-                continue
-            to_address=o['address']
+    to_address=select_receiver_reference(input_addr, outputs_list_no_exodus)
 
     data_script_list = []
     for idx,o in enumerate(outputs_list_no_exodus):
@@ -622,11 +632,15 @@ def parse_multisig(tx, tx_hash='unknown'):
                 
     return parse_dict
 
-def is_accepted_output(output):
+def is_multisig_output(output):
+        s=output['script']
+        is_multisig=s.endswith('checkmultisig')
+        return is_multisig
+
+def is_paytopubkeyhash_output(output):
         s=output['script']
         is_paytopubkeyhash=s.startswith('dup hash160') and s.endswith('equalverify checksig')
-        is_multisig=s.endswith('checkmultisig')
-        return is_paytopubkeyhash or is_multisig
+        return is_paytopubkeyhash
     
 def examine_outputs(outputs_list, tx_hash, raw_tx):
         # if we're here, then 1EXoDus is within the outputs. Remove it, but ...
@@ -634,7 +648,8 @@ def examine_outputs(outputs_list, tx_hash, raw_tx):
         outputs_to_exodus=[]
         different_outputs_values={}
         for o in outputs_list:
-            if not is_accepted_output(o):
+            # ignore outputs which are not pay-to-pubkey-hash or multisig
+            if not (is_paytopubkeyhash_output(o) or is_multisig_output(o)):
                 continue
             if o['address']!=exodus_address:
                 outputs_list_no_exodus.append(o)
@@ -656,10 +671,7 @@ def examine_outputs(outputs_list, tx_hash, raw_tx):
                 if i['address']==exodus_address:
                     from_exodus=True
                     break
-            if not from_exodus:
-                info("invalid tx with multiple 1EXoDus outputs not from 1EXoDus: "+tx_hash)
-                return (None, None, None, (True,'multiple 1EXoDus outputs not from 1EXoDus'))
-            else: # 1EXoDus has sent this tx
+            if from_exodus: # 1EXoDus has sent this tx
                 # Maximal 2 values are valid (dust and change)
                 if len(different_outputs_values.keys()) > 2:
                     error("tx sent by exodus with more than 2 different values: "+tx_hash)
