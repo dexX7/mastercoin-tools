@@ -317,7 +317,7 @@ def select_receiver_reference(input_addr, outputs):
             potential_recipients.append(address)
     # recipient is last output, but first reference to sender may be skipped
     remaining=len(potential_recipients)  
-    if remaining==1 or sender_references>1 or potential_recipients[-1]!=input_addr:
+    if remaining==1 or sender_references>1 or remaining>0 and potential_recipients[-1]!=input_addr:
         to_address=potential_recipients[-1]
     # strip change output
     elif remaining>1 and potential_recipients[-1]==input_addr:
@@ -631,16 +631,6 @@ def parse_multisig(tx, tx_hash='unknown'):
     parse_dict['to_address']=to_address
                 
     return parse_dict
-
-def is_multisig_output(output):
-        s=output['script']
-        is_multisig=s.endswith('checkmultisig')
-        return is_multisig
-
-def is_paytopubkeyhash_output(output):
-        s=output['script']
-        is_paytopubkeyhash=s.startswith('dup hash160') and s.endswith('equalverify checksig')
-        return is_paytopubkeyhash
     
 def examine_outputs(outputs_list, tx_hash, raw_tx):
         # if we're here, then 1EXoDus is within the outputs. Remove it, but ...
@@ -712,7 +702,7 @@ def get_tx_method(tx, tx_hash='unknown'): # multisig_simple, multisig, multisig_
         # check if basic or multisig
         is_basic=True
         for o in outputs_list:
-            if is_script_multisig(o['script']):
+            if is_multisig_output(o):
                 if num_of_outputs == 2:
                     return 'multisig_simple'
                 else:

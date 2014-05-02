@@ -173,7 +173,7 @@ def parse():
         # check if basic or multisig
         is_basic=True
         for o in outputs_list:
-            if is_script_multisig(o['script']):
+            if is_multisig_output(o):
                 debug('multisig tx found: '+tx_hash)
                 is_basic=False
                 break
