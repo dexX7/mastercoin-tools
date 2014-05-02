@@ -291,10 +291,9 @@ def select_input_reference(inputs):
             inputs_values_dict[input_address]+=int(input_value)
         else:
             inputs_values_dict[input_address]=int(input_value)
-            
-        # the from address is the one with the highest value
-        from_address=max(inputs_values_dict, key=inputs_values_dict.get)
-        return from_address
+    # the intput reference is the one with the highest value
+    from_address=max(inputs_values_dict, key=inputs_values_dict.get)
+    return from_address
 
 def get_obfus_str_list(address, length):
        obfus_str_list=[]
