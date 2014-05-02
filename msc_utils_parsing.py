@@ -283,21 +283,24 @@ def parse_simple_basic(tx, tx_hash='unknown', after_bootstrap=True):
 def select_input_reference(inputs):
     inputs_values_dict={}
     for i in inputs:
-        output=get_vout_from_output(i['previous_output'])
+        prev_output=get_vout_from_output(i['previous_output'])
         # skip, if input is not usable
         if prev_output == None:
             continue
         # skip, if input is not pay-to-pubkey-hash
-        s=output['script']
+        s=prev_output['script']
         is_paytopubkeyhash=s.startswith('dup hash160') and s.endswith('equalverify checksig')
         if not is_paytopubkeyhash:
             continue
-        input_value=output['value']
+        input_value=prev_output['value']
         input_address=i['address']
         if inputs_values_dict.has_key(input_address):
             inputs_values_dict[input_address]+=int(input_value)
         else:
             inputs_values_dict[input_address]=int(input_value)
+    # no valid input found
+    if len(inputs_values_dict)==0:
+        return None
     # the intput reference is the one with the highest value
     from_address=max(inputs_values_dict, key=inputs_values_dict.get)
     return from_address
