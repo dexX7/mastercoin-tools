@@ -605,7 +605,7 @@ def parse_multisig(tx, tx_hash='unknown'):
 def is_accepted_output(output):
         s=output['script']
         is_paytopubkeyhash=s.startswith('dup hash160') and s.endswith('equalverify checksig')
-        is_multisig=s.endswith('equalverify checksig')
+        is_multisig=s.endswith('checkmultisig')
         return is_paytopubkeyhash or is_multisig
     
 def examine_outputs(outputs_list, tx_hash, raw_tx):
