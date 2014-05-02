@@ -343,10 +343,6 @@ def parse_multisig(tx, tx_hash='unknown'):
 
             # more sanity checks on BIP11
             max_pubkeys=int(fields[-1].split()[-2])
-            req_pubkeys=int(fields[0])
-            if req_pubkeys != 1:
-                info('error m-of-n with m different than 1 ('+str(req_pubkeys)+'). skipping tx '+tx_hash)
-                return {'tx_hash':tx_hash, 'invalid':(True, 'error m-of-n with m different than 1')}
             if max_pubkeys < 2 or max_pubkeys > 3:
                 info('error m-of-n with n out of range ('+str(max_pubkeys)+'). skipping tx '+tx_hash)
                 return {'tx_hash':tx_hash, 'invalid':(True, 'error m-of-n with n out of range')}
