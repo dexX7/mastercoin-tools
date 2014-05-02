@@ -336,9 +336,6 @@ def parse_multisig(tx, tx_hash='unknown'):
     for idx,o in enumerate(outputs_list_no_exodus):
         if o['address']==None: # This should be the multisig
             script=o['script']
-            # verify that it is a multisig
-            if not script.endswith('checkmultisig'):
-                error('Bad multisig data script '+script)
             fields=script.split('[ ')
 
             # more sanity checks on BIP11
