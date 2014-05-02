@@ -60,6 +60,12 @@ def get_raw_tx(tx_hash):
         return out
 
 def get_json_tx(raw_tx, tx_hash='unknown hash'):
+    if raw_tx != None and raw_tx.strip()[:3]=='Ass': #assertion failed in mailbox.cpp
+        if tx_hash!='unknown hash':
+            info('assertion failed, retry to get '+tx_hash)
+            raw_tx=get_raw_tx(tx_hash)
+        else:
+            error('assertion failed, no tx_hash provided')
     parsed_json_tx=None
     for i in range(MAX_COMMAND_TRIES): # few tries
         json_tx, err = run_command("sx showtx -j", raw_tx)
