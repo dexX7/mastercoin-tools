@@ -321,16 +321,14 @@ def parse_multisig(tx, tx_hash='unknown'):
         info(str(invalid[1])+' on '+tx_hash)
         return {'tx_hash':tx_hash, 'invalid':invalid}
         
-    tx_dust=outputs_to_exodus[0]['value']
-    dust_outputs=different_outputs_values[tx_dust]
     to_address='unknown'
-    for o in dust_outputs: # assume the only other dust is to recipient
-        if o['address']!=exodus_address:
+    num_outputs=len(outputs_list_no_exodus)
+    for idx,o in enumerate(outputs_list_no_exodus): # recipient is not exodus
+        if o['address']!=None:
+            # first output to sender may be change
+            if o['address']==input_addr and idx+1<num_outputs:
+                continue
             to_address=o['address']
-           if to_address[0] == '3': #P2SH
-                info('P2SH not implemented, see https://github.com/mastercoin-MSC/spec/issues/85, hash: '+tx_hash)
-                return {'tx_hash':tx_hash, 'invalid':(True, 'P2SH sending not supported')}
-            continue
 
     data_script_list = []
     for idx,o in enumerate(outputs_list_no_exodus):
