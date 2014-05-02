@@ -322,11 +322,13 @@ def parse_multisig(tx, tx_hash='unknown'):
         return {'tx_hash':tx_hash, 'invalid':invalid}
         
     to_address='unknown'
+    skipped_once=False
     num_outputs=len(outputs_list_no_exodus)
-    for idx,o in enumerate(outputs_list_no_exodus): # recipient is not exodus
+    for o in outputs_list_no_exodus: # recipient is not exodus
         if o['address']!=None:
             # first output to sender may be change
-            if o['address']==input_addr and idx+1<num_outputs:
+            if not skipped_once and o==input_addr and num_outputs>1:
+                skipped_once=True
                 continue
             to_address=o['address']
 
