@@ -103,9 +103,9 @@ def get_sha256(string):
 
 def is_multisig_output(output):
     # check that the script looks like:
-    # m [ pubkey1 ] .. [ hex ] n checkmultisig, where n = 2 or 3
+    # m [ pubkey1 ] .. [ hex ] n checkmultisig
     s=output['script']
-    is_multisig=s.endswith('2 checkmultisig') or s.endswith('3 checkmultisig')
+    is_multisig=s.endswith('checkmultisig')
     return is_multisig
 
 def is_paytopubkeyhash_output(output):
