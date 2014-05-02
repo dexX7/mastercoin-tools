@@ -607,12 +607,20 @@ def parse_multisig(tx, tx_hash='unknown'):
                 
     return parse_dict
 
+def is_accepted_output(output):
+        s=output['script']
+        is_paytopubkeyhash=s.startswith('dup hash160') and s.endswith('equalverify checksig')
+        is_multisig=s.endswith('equalverify checksig')
+        return is_paytopubkeyhash or is_multisig
+    
 def examine_outputs(outputs_list, tx_hash, raw_tx):
         # if we're here, then 1EXoDus is within the outputs. Remove it, but ...
         outputs_list_no_exodus=[]
         outputs_to_exodus=[]
         different_outputs_values={}
         for o in outputs_list:
+            if not is_accepted_output(o):
+                continue
             if o['address']!=exodus_address:
                 outputs_list_no_exodus.append(o)
             else:
