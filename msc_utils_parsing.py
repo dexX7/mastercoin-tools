@@ -207,20 +207,8 @@ def parse_simple_basic(tx, tx_hash='unknown', after_bootstrap=True):
     # collect all "from addresses" (normally only a single one)
     from_address=''
     try:
-        inputs=json_tx['inputs']
-        inputs_values_dict={}
-        for i in inputs:
-            input_value=get_value_from_output(i['previous_output'])
-            if input_value == None:
-                error('failed get_value_from_output')
-            input_address=i['address']
-            if inputs_values_dict.has_key(input_address):
-                inputs_values_dict[input_address]+=int(input_value)
-            else:
-                inputs_values_dict[input_address]=int(input_value)
-
         # the from address is the one with the highest value
-        from_address=max(inputs_values_dict, key=inputs_values_dict.get)
+        from_address=select_input_reference(json_tx['inputs'])
 
         if from_address == None:
             info('invalid from address (address with largest value is None) at tx '+tx_hash)
@@ -292,6 +280,22 @@ def parse_simple_basic(tx, tx_hash='unknown', after_bootstrap=True):
         info('invalid mastercoin tx ('+str(e)+') at tx '+tx_hash)
         return {'invalid':(True,'bad parsing'), 'tx_hash':tx_hash}
 
+def select_input_reference(inputs):
+    inputs_values_dict={}
+    for i in inputs:
+        input_value=get_value_from_output(i['previous_output'])
+        if input_value == None:
+            error('failed get_value_from_output')
+        input_address=i['address']
+        if inputs_values_dict.has_key(input_address):
+            inputs_values_dict[input_address]+=int(input_value)
+        else:
+            inputs_values_dict[input_address]=int(input_value)
+            
+        # the from address is the one with the highest value
+        from_address=max(inputs_values_dict, key=inputs_values_dict.get)
+        return from_address
+
 def get_obfus_str_list(address, length):
        obfus_str_list=[]
        obfus_str_list.append(get_sha256(address)) # 1st obfus is simple sha256
@@ -306,7 +310,12 @@ def parse_multisig(tx, tx_hash='unknown'):
         return {}
     parsed_json_tx=get_json_tx(tx)
     parse_dict={}
-    input_addr=''
+    input_addr=select_input_reference(parsed_json_tx['inputs'])
+    
+    if input_addr == None:
+        info('invalid from address (address with largest value is None) at tx '+tx_hash)
+        return {'invalid':(True,'address with largest value is None'), 'tx_hash':tx_hash}
+                                      
     for i in parsed_json_tx['inputs']:
         previous_output=i['previous_output']
         if input_addr == '':
