@@ -283,9 +283,16 @@ def parse_simple_basic(tx, tx_hash='unknown', after_bootstrap=True):
 def select_input_reference(inputs):
     inputs_values_dict={}
     for i in inputs:
-        input_value=get_value_from_output(i['previous_output'])
-        if input_value == None:
-            error('failed get_value_from_output')
+        output=get_vout_from_output(i['previous_output'])
+        # skip, if input is not usable
+        if prev_output == None:
+            continue
+        # skip, if input is not pay-to-pubkey-hash
+        s=output['script']
+        is_paytopubkeyhash=s.startswith('dup hash160') and s.endswith('equalverify checksig')
+        if not is_paytopubkeyhash:
+            continue
+        input_value=output['value']
         input_address=i['address']
         if inputs_values_dict.has_key(input_address):
             inputs_values_dict[input_address]+=int(input_value)
