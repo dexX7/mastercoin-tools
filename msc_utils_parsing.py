@@ -364,6 +364,9 @@ def parse_multisig(tx, tx_hash='unknown'):
     for idx,o in enumerate(outputs_list_no_exodus):
         if o['address']==None: # This should be the multisig
             script=o['script']
+            # verify that it is a multisig
+            if not script.endswith('checkmultisig'):
+                error('Bad multisig data script '+script)
             fields=script.split('[ ')
 
             # more sanity checks on BIP11
@@ -631,7 +634,7 @@ def parse_multisig(tx, tx_hash='unknown'):
     parse_dict['to_address']=to_address
                 
     return parse_dict
-    
+
 def examine_outputs(outputs_list, tx_hash, raw_tx):
         # if we're here, then 1EXoDus is within the outputs. Remove it, but ...
         outputs_list_no_exodus=[]
@@ -639,7 +642,7 @@ def examine_outputs(outputs_list, tx_hash, raw_tx):
         different_outputs_values={}
         for o in outputs_list:
             # ignore outputs which are not pay-to-pubkey-hash or multisig
-            if not (is_paytopubkeyhash_output(o) or is_multisig_output(o)):
+            if not (is_script_paytopubkeyhash(o['script']) or is_script_multisig(o['script'])):
                 continue
             if o['address']!=exodus_address:
                 outputs_list_no_exodus.append(o)
@@ -702,7 +705,7 @@ def get_tx_method(tx, tx_hash='unknown'): # multisig_simple, multisig, multisig_
         # check if basic or multisig
         is_basic=True
         for o in outputs_list:
-            if is_multisig_output(o):
+            if is_script_multisig(o['script']):
                 if num_of_outputs == 2:
                     return 'multisig_simple'
                 else:
