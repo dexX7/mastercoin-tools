@@ -16,17 +16,11 @@ import simplejson
 import sys
 import operator
 import time
-from msc_utils_bitcoin import *
+from msc_utils_parsing import *
 
 def main():
-
     msc_globals.init()
 
-    # full story format or just csv
-    output_format='csv'
-    if len(sys.argv) > 1:
-        if sys.argv[1]=='story':
-            output_format='story' # a.k.a long format
     # get all tx of exodus address
     history=get_history(exodus_address)
     # sort
@@ -47,9 +41,9 @@ def main():
             if block_timestamp == None:
                 error('failed to get timestamp: '+err)
             try:
-            	tx_sec_before_deadline=exodus_bootstrap_orig_deadline-block_timestamp
+                tx_sec_before_deadline=exodus_bootstrap_orig_deadline-block_timestamp
             except TypeError:
-            	error('bad block timestamp')
+                error('bad block timestamp')
             # bonus is 10% for a week
             bonus=max((tx_sec_before_deadline+0.0)/(3600*24*7*10.0)*100,0)
             dacoins=str('{:.0f}'.format(int(value)*(100+bonus)))
@@ -57,10 +51,9 @@ def main():
             # give dacoins to highest contributing address.
             output_dict={} # dict to collect outputs per address
             for i in json_tx['inputs']:
-                prev_tx_hash=i['previous_output'].split(':')[0]
-                prev_tx_output_index=i['previous_output'].split(':')[1]
-                json_prev_tx=get_tx(prev_tx_hash)
-                output_value=json_prev_tx['outputs'][int(prev_tx_output_index)]['value']
+                output_value=get_value_from_output(i['previous_output'])
+                if output_value==None:
+                    error('failed get_value_from_output')                
                 if output_dict.has_key(i['address']):
                     output_dict[i['address']]+=output_value
                 else:
@@ -76,17 +69,10 @@ def main():
             parsed['invalid']=False
             parsed['tx_time']=str(block_timestamp)+'000'
             try:
-            	filename='tx/'+parsed['tx_hash']+'.json'
-                try:
-                    f=open(filename, 'w')
-                    f.write('[')
-                    json.dump(parsed, f)
-                    f.write(']\n')
-                    f.close()
-                except OSError:
-                    info("dump to file error for "+tx_hash)
+                filename='tx/'+parsed['tx_hash']+'.json'
+                atomic_json_dump(parsed, filename)
             except IndexError:
-            	info("cannot parse 'tx_hash' in "+tx_hash)
+                info("cannot parse 'tx_hash' in "+tx_hash)
 
 
 if __name__ == "__main__":
