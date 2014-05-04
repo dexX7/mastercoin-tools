@@ -196,10 +196,7 @@ def parse():
                     try:
                         orig_json=json.load(f)[0]
                     except (KeyError, ValueError):
-                        try:
-                            orig_json=json.load(f)
-                        except ValueError:
-                            error('failed loading json from '+filename)
+                        error('failed loading json from '+filename)
                     f.close()
                     # verify bootstrap block
                     if orig_json.has_key('block'):
@@ -213,12 +210,9 @@ def parse():
                 except IOError:
                      pass
                 if orig_json != None: # it was an exodus tx
-                    if len(orig_json)==1:
-                        new_json=[orig_json[0],parsed]
-                        atomic_json_dump(new_json, filename, add_brackets=False)
-                        info('basic tx was also exodus on '+tx_hash)
-                    else:
-                        info('basic tx is already present on exodus on '+tx_hash)
+                    new_json=[orig_json,parsed]
+                    atomic_json_dump(new_json, filename, add_brackets=False)
+                    info('basic tx was also exodus on '+tx_hash)
                 else:
                     atomic_json_dump(parsed, filename)
             else: # num_of_outputs <= 2 and not multisig
