@@ -288,7 +288,7 @@ def select_input_reference(inputs):
         if prev_output==None:
             continue
         # skip, if input is not pay-to-pubkey-hash
-        if not is_paytopubkeyhash_output(prev_output):
+        if not is_script_paytopubkeyhash(prev_output['script']):
             continue
         input_value=prev_output['value']
         input_address=i['address']
@@ -309,7 +309,7 @@ def select_receiver_reference(input_addr, outputs):
     # filter outputs to consider only pay-to-pubkey-hash outputs
     potential_recipients=[]
     for o in outputs:
-        if is_paytopubkeyhash_output(o):
+        if is_script_paytopubkeyhash(o['script']):
             address=o['address']
             # count outputs to sender
             if address==input_addr:
