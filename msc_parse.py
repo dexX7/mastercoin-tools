@@ -158,10 +158,6 @@ def parse():
         outputs_list=json_tx['outputs']
         (outputs_list_no_exodus, outputs_to_exodus, different_outputs_values, invalid)=examine_outputs(outputs_list, tx_hash, raw_tx)
 
-        if invalid != None:
-            info(str(invalid[1])+' on '+tx_hash)
-            parsed['invalid']=invalid
-
         num_of_outputs=len(outputs_list)
 
         (block_timestamp, err)=get_block_timestamp(int(block))
@@ -184,7 +180,11 @@ def parse():
                 parsed['block']=str(block)
                 parsed['index']=str(index)
                 if not parsed.has_key('invalid'):
-                    parsed['invalid']=False
+                    if invalid != None:
+                        info(str(invalid[1])+' on '+tx_hash)
+                        parsed['invalid']=invalid
+                    else:
+                        parsed['invalid']=False
                 parsed['tx_time']=str(block_timestamp)+'000'
                 debug(str(parsed))
                 filename='tx/'+parsed['tx_hash']+'.json'
@@ -237,7 +237,11 @@ def parse():
                 parsed['block']=str(block)
                 parsed['index']=str(index)
                 if not parsed.has_key('invalid'):
-                    parsed['invalid']=False
+                    if invalid != None:
+                        info(str(invalid[1])+' on '+tx_hash)
+                        parsed['invalid']=invalid
+                    else:
+                        parsed['invalid']=False
                 parsed['tx_time']=str(block_timestamp)+'000'
                 debug(str(parsed))
                 filename='tx/'+parsed['tx_hash']+'.json'
@@ -252,7 +256,11 @@ def parse():
                     parsed['block']=str(block)
                     parsed['index']=str(index)
                     if not parsed.has_key('invalid'):
-                        parsed['invalid']=False
+                        if invalid != None:
+                            info(str(invalid[1])+' on '+tx_hash)
+                            parsed['invalid']=invalid
+                        else:
+                            parsed['invalid']=False
                     parsed['tx_time']=str(block_timestamp)+'000'
                     debug(str(parsed))
                     filename='tx/'+parsed['tx_hash']+'.json'
