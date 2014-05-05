@@ -102,9 +102,7 @@ def parse():
         history.sort(key=output_height)
     else:
         # build fake history of length 1 (debug purposes)
-        json_tx=get_json_tx(get_raw_tx(single_tx))
-	if json_tx==None: #retry
-        	json_tx=get_json_tx(get_raw_tx(single_tx))
+        json_tx=get_tx(single_tx)
         marker_number=-1
         marker_value=-1
         i=0
@@ -198,15 +196,12 @@ def parse():
                     try:
                         orig_json=json.load(f)[0]
                     except (KeyError, ValueError):
-                        try:
-                            orig_json=json.load(f)
-                        except ValueError:
-                            error('failed loading json from '+filename)
+                        error('failed loading json from '+filename)
                     f.close()
                     # verify bootstrap block
                     if orig_json.has_key('block'):
                         orig_block=orig_json['block']
-                        debug('found this tx already on (previous) block '+orig_block)
+                        debug('found this tx already on (previous) block '+str(orig_block))
                         if int(orig_block)>last_exodus_bootstrap_block:
                             debug('but it is post exodus - ignoring')
                             orig_json=None
@@ -215,12 +210,9 @@ def parse():
                 except IOError:
                      pass
                 if orig_json != None: # it was an exodus tx
-                    if len(orig_json)==1:
-                        new_json=[orig_json[0],parsed]
-                        atomic_json_dump(new_json, filename, add_brackets=False)
-                        info('basic tx was also exodus on '+tx_hash)
-                    else:
-                        info('basic tx is already present on exodus on '+tx_hash)
+                    new_json=[orig_json,parsed]
+                    atomic_json_dump(new_json, filename, add_brackets=False)
+                    info('basic tx was also exodus on '+tx_hash)
                 else:
                     atomic_json_dump(parsed, filename)
             else: # num_of_outputs <= 2 and not multisig
@@ -272,7 +264,7 @@ def parse():
         if single_tx == None and block != None:
             msc_globals.last_block=block
 
-    rev=get_revision_dict( last_block, options.repository_path )
+    rev=get_revision_dict(last_block, options.repository_path)
     atomic_json_dump(rev, 'www/revision.json', add_brackets=False)
 
     if archive:

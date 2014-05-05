@@ -28,10 +28,6 @@ fundraisers_dict={}
 fundraisers_metadata_dict={}
 #create dict of divisible/non smart_properties
 property_type_dict={}
-# invalidate tx due to "avoid changing history" issues
-#invalidate_tx_list=['13fb62038d98ca4680c6295ba10d17b63c050ccde9c4cee7579fd2e148f25581', \
-#                    '67d6302a45380289de0097afdae8d21a84b0a41221ca14319b3e4cdd8952a53b', \
-#                    '8593540888247a9772fbe0fbcdd765df179779ae0c728e1fe83051f1bf0efe2f']
 
 # prepare lists for mastercoin and test
 sorted_currency_tx_list={'Mastercoin':[],'Test Mastercoin':[]} # list 0 for mastercoins, list 1 for test mastercoins
@@ -1040,8 +1036,7 @@ def get_available_reward(height, c):
 
 # validate a matercoin transaction
 def check_mastercoin_transaction(t, index=-1):
-
-    debug('block '+t['block'])
+    debug('block '+str(t['block']))
 
     # update icon and details
     update_initial_icon_details(t)
