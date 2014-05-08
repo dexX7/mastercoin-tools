@@ -339,7 +339,7 @@ def get_obfus_str_list(address, length):
 def parse_multisig(tx, tx_hash='unknown'):
     if multisig_disabled:
         info('multisig is disabled: '+tx_hash)
-        return {}
+        return {'invalid':(True,'multisig is disabled'), 'tx_hash':tx_hash}
     parsed_json_tx=get_json_tx(tx)
     parse_dict={}
     
