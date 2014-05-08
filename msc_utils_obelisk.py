@@ -60,6 +60,12 @@ def get_raw_tx(tx_hash):
         return out
 
 def get_json_tx(raw_tx, tx_hash='unknown hash'):
+    if raw_tx != None and raw_tx.strip()[:3]=='Ass': #assertion failed in mailbox.cpp
+        if tx_hash!='unknown hash':
+            info('assertion failed, retry to get '+tx_hash)
+            raw_tx=get_raw_tx(tx_hash)
+        else:
+            error('assertion failed, no tx_hash provided')
     parsed_json_tx=None
     for i in range(MAX_COMMAND_TRIES): # few tries
         json_tx, err = run_command("sx showtx -j", raw_tx)
@@ -167,6 +173,26 @@ def get_address_from_output(tx_and_number):
     all_outputs=json_tx['outputs']
     output=all_outputs[number]
     return output['address']
+
+def get_vout_from_output(tx_and_number):
+    try:
+        txid=tx_and_number.split(':')[0]
+        number=int(tx_and_number.split(':')[1])
+    except IndexError:
+        info('index error')
+        return None
+    rawtx=get_raw_tx(txid)
+    json_tx=get_json_tx(rawtx)
+    if json_tx == None:
+        info('failed getting json_tx (None) for '+txid)
+        return None
+    try:
+        all_outputs=json_tx['outputs']
+    except TypeError: # obelisk can give None
+        info('bad outputs parsing on: '+json_tx)
+        return None
+    output=all_outputs[number]
+    return output
 
 def get_pubkey(addr):
     out, err = run_command("sx get-pubkey "+addr)

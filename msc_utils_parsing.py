@@ -207,20 +207,8 @@ def parse_simple_basic(tx, tx_hash='unknown', after_bootstrap=True):
     # collect all "from addresses" (normally only a single one)
     from_address=''
     try:
-        inputs=json_tx['inputs']
-        inputs_values_dict={}
-        for i in inputs:
-            input_value=get_value_from_output(i['previous_output'])
-            if input_value == None:
-                error('failed get_value_from_output')
-            input_address=i['address']
-            if inputs_values_dict.has_key(input_address):
-                inputs_values_dict[input_address]+=int(input_value)
-            else:
-                inputs_values_dict[input_address]=int(input_value)
-
         # the from address is the one with the highest value
-        from_address=max(inputs_values_dict, key=inputs_values_dict.get)
+        from_address=select_input_reference(json_tx['inputs'])
 
         if from_address == None:
             info('invalid from address (address with largest value is None) at tx '+tx_hash)
@@ -292,6 +280,50 @@ def parse_simple_basic(tx, tx_hash='unknown', after_bootstrap=True):
         info('invalid mastercoin tx ('+str(e)+') at tx '+tx_hash)
         return {'invalid':(True,'bad parsing'), 'tx_hash':tx_hash}
 
+def select_input_reference(inputs):
+    inputs_values_dict={}
+    for i in inputs:
+        prev_output=get_vout_from_output(i['previous_output'])
+        # skip, if input is not usable
+        if prev_output==None:
+            continue
+        # skip, if input is not pay-to-pubkey-hash
+        if not is_script_paytopubkeyhash(prev_output['script']):
+            return None
+        input_value=prev_output['value']
+        input_address=i['address']
+        if inputs_values_dict.has_key(input_address):
+            inputs_values_dict[input_address]+=int(input_value)
+        else:
+            inputs_values_dict[input_address]=int(input_value)
+    # no valid input found
+    if len(inputs_values_dict)==0:
+        return None
+    # the intput reference is the one with the highest value
+    from_address=max(inputs_values_dict, key=inputs_values_dict.get)
+    return from_address
+
+def select_receiver_reference(input_addr, outputs):
+    to_address='unknown'
+    sender_references=0    
+    # filter outputs to consider only pay-to-pubkey-hash outputs
+    potential_recipients=[]
+    for o in outputs:
+        if is_script_paytopubkeyhash(o['script']):
+            address=o['address']
+            # count outputs to sender
+            if address==input_addr:
+                sender_references+=1
+            potential_recipients.append(address)
+    # recipient is last output, but first reference to sender may be skipped
+    remaining=len(potential_recipients)  
+    if remaining==1 or sender_references>1 or remaining>0 and potential_recipients[-1]!=input_addr:
+        to_address=potential_recipients[-1]
+    # strip change output
+    elif remaining>1 and potential_recipients[-1]==input_addr:
+        to_address=potential_recipients[-2]
+    return to_address        
+
 def get_obfus_str_list(address, length):
        obfus_str_list=[]
        obfus_str_list.append(get_sha256(address)) # 1st obfus is simple sha256
@@ -306,7 +338,11 @@ def parse_multisig(tx, tx_hash='unknown'):
         return {}
     parsed_json_tx=get_json_tx(tx)
     parse_dict={}
-    input_addr=''
+    input_addr=select_input_reference(parsed_json_tx['inputs'])
+    
+    if input_addr == None:
+        info('invalid from address (address with largest value is None) or non-pay-to-pubkeyhash supplied at tx '+tx_hash)
+        return {'invalid':(True,'address with largest value is None or non-pay-to-pubkeyhash supplied'), 'tx_hash':tx_hash}
     for i in parsed_json_tx['inputs']:
         previous_output=i['previous_output']
         if input_addr == '':
@@ -321,16 +357,7 @@ def parse_multisig(tx, tx_hash='unknown'):
         info(str(invalid[1])+' on '+tx_hash)
         return {'tx_hash':tx_hash, 'invalid':invalid}
         
-    tx_dust=outputs_to_exodus[0]['value']
-    dust_outputs=different_outputs_values[tx_dust]
-    to_address='unknown'
-    for o in dust_outputs: # assume the only other dust is to recipient
-        if o['address']!=exodus_address and o['address']!=None:
-            to_address=o['address']
-            if to_address[0] == '3': #P2SH
-                info('P2SH not implemented, see https://github.com/mastercoin-MSC/spec/issues/85, hash: '+tx_hash)
-                return {'tx_hash':tx_hash, 'invalid':(True, 'P2SH sending not supported')}
-            continue
+    to_address=select_receiver_reference(input_addr, outputs_list_no_exodus)
 
     data_script_list = []
     for idx,o in enumerate(outputs_list_no_exodus):
@@ -343,10 +370,6 @@ def parse_multisig(tx, tx_hash='unknown'):
 
             # more sanity checks on BIP11
             max_pubkeys=int(fields[-1].split()[-2])
-            req_pubkeys=int(fields[0])
-            if req_pubkeys != 1:
-                info('error m-of-n with m different than 1 ('+str(req_pubkeys)+'). skipping tx '+tx_hash)
-                return {'tx_hash':tx_hash, 'invalid':(True, 'error m-of-n with m different than 1')}
             if max_pubkeys < 2 or max_pubkeys > 3:
                 info('error m-of-n with n out of range ('+str(max_pubkeys)+'). skipping tx '+tx_hash)
                 return {'tx_hash':tx_hash, 'invalid':(True, 'error m-of-n with n out of range')}
@@ -617,6 +640,9 @@ def examine_outputs(outputs_list, tx_hash, raw_tx):
         outputs_to_exodus=[]
         different_outputs_values={}
         for o in outputs_list:
+            # ignore outputs which are not pay-to-pubkey-hash or multisig
+            if not (is_script_paytopubkeyhash(o['script']) or is_script_multisig(o['script'])):
+                continue
             if o['address']!=exodus_address:
                 outputs_list_no_exodus.append(o)
             else:
@@ -637,10 +663,7 @@ def examine_outputs(outputs_list, tx_hash, raw_tx):
                 if i['address']==exodus_address:
                     from_exodus=True
                     break
-            if not from_exodus:
-                info("invalid tx with multiple 1EXoDus outputs not from 1EXoDus: "+tx_hash)
-                return (None, None, None, (True,'multiple 1EXoDus outputs not from 1EXoDus'))
-            else: # 1EXoDus has sent this tx
+            if from_exodus: # 1EXoDus has sent this tx
                 # Maximal 2 values are valid (dust and change)
                 if len(different_outputs_values.keys()) > 2:
                     error("tx sent by exodus with more than 2 different values: "+tx_hash)
