@@ -289,7 +289,7 @@ def select_input_reference(inputs):
             continue
         # skip, if input is not pay-to-pubkey-hash
         if not is_script_paytopubkeyhash(prev_output['script']):
-            continue
+            return None
         input_value=prev_output['value']
         input_address=i['address']
         if inputs_values_dict.has_key(input_address):
@@ -341,9 +341,8 @@ def parse_multisig(tx, tx_hash='unknown'):
     input_addr=select_input_reference(parsed_json_tx['inputs'])
     
     if input_addr == None:
-        info('invalid from address (address with largest value is None) at tx '+tx_hash)
-        return {'invalid':(True,'address with largest value is None'), 'tx_hash':tx_hash}
-                                      
+        info('invalid from address (address with largest value is None) or non-pay-to-pubkeyhash supplied at tx '+tx_hash)
+        return {'invalid':(True,'address with largest value is None or non-pay-to-pubkeyhash supplied'), 'tx_hash':tx_hash}
     for i in parsed_json_tx['inputs']:
         previous_output=i['previous_output']
         if input_addr == '':
