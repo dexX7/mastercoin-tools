@@ -40,6 +40,7 @@ def parse():
     (options, args) = parser.parse_args()
     msc_globals.d=options.debug_mode
     single_tx=options.single_tx
+    archive=options.archive
     requested_block_height=options.starting_block_height
 
     # show debug on
@@ -91,9 +92,6 @@ def parse():
 
     # to catch chain reorgs, check 5 blocks back
     starting_block_height = int(starting_block_height) - 5
-
-    archive=options.archive
-
     info('starting parsing at block '+str(starting_block_height))
 
     if single_tx == None:
