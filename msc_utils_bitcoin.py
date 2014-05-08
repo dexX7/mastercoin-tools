@@ -101,16 +101,16 @@ def bc_address_to_hash_160(addr):
 def get_sha256(string):
     return hashlib.sha256(string).hexdigest()
 
-def is_script_output(output):
-    # check that the script looks like:
-    # 1 [ hex ] ...
-    return output.startswith('1 [ ')
-
 def is_script_multisig(output):
     # check that the script looks like:
-    # 1 [ pubkey1 ] .. [ hex ] [ 2 of 3 ] checkmultisig
-    return is_script_output(output) and output.endswith('checkmultisig')
+    # m [ pubkey1 ] .. [ hex ] n checkmultisig    
+    return output.endswith('checkmultisig')
 
+def is_script_paytopubkeyhash(output):
+    # check that the script looks like:
+    # dup hash160 [ hex ] equalverify checksig
+    return output.startswith('dup hash160') and output.endswith('equalverify checksig')
+        
 def is_pubkey_valid(pubkey):
     try:
         sec=encoding.binascii.unhexlify(pubkey)
