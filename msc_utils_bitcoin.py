@@ -104,7 +104,7 @@ def is_pubkey_valid(pubkey):
         sec=encoding.binascii.unhexlify(pubkey)
         public_pair=encoding.sec_to_public_pair(sec)
         return curves.ecdsa.point_is_valid(ecdsa.generator_secp256k1, public_pair[0], public_pair[1])
-    except TypeError:
+    except:
         return False
 
 def get_compressed_pubkey_format(pubkey):
