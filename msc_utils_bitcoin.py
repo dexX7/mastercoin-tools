@@ -112,8 +112,11 @@ def get_compressed_pubkey_format(pubkey):
     return encoding.binascii.hexlify(encoding.public_pair_to_sec(public_pair))
 
 def get_address_of_pubkey(pubkey):
-    public_pair=encoding.sec_to_public_pair(encoding.binascii.unhexlify(pubkey))
-    return encoding.public_pair_to_bitcoin_address(public_pair)
+    sha = hashlib.sha256(pubkey.decode('hex')).digest()
+    h = hashlib.new('ripemd160')
+    h.update(sha)
+    h160 = h.digest()
+    return hash_160_to_bc_address(h160)
 
 def get_nearby_valid_pubkey(pubkey):
     valid_pubkey=pubkey
