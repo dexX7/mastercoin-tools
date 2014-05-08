@@ -693,24 +693,3 @@ def examine_outputs(outputs_list, tx_hash, raw_tx):
                     outputs_list_no_exodus+=[dust_outputs_to_exodus[0]]
                     outputs_to_exodus=non_dust_outputs_to_exodus+dust_outputs_to_exodus[1:]
         return (outputs_list_no_exodus, outputs_to_exodus, different_outputs_values, None)
-
-def get_tx_method(tx, tx_hash='unknown'): # multisig_simple, multisig, multisig_invalid, basic
-        json_tx=get_json_tx(tx)
-        outputs_list=json_tx['outputs']
-        (outputs_list_no_exodus, outputs_to_exodus, different_outputs_values, invalid)=examine_outputs(outputs_list, hx_hash, tx)
-
-        num_of_outputs=len(outputs_list)
-
-        # check if basic or multisig
-        is_basic=True
-        for o in outputs_list:
-            if is_script_multisig(o['script']):
-                if num_of_outputs == 2:
-                    return 'multisig_simple'
-                else:
-                    if num_of_outputs > 2:
-                        return 'multisig'
-                    else:
-                        return 'multisig_invalid'
-        # all the rest, which includes exodus and invalids are considered as basic
-        return 'basic'
