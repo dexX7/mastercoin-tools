@@ -214,7 +214,6 @@ def parse_simple_basic(tx, tx_hash='unknown', after_bootstrap=True):
             info('invalid from address (address with largest value is None) at tx '+tx_hash)
             return {'invalid':(True,'address with largest value is None'), 'tx_hash':tx_hash}
 
-
         #######################################################################
         # follow Class A P&D https://github.com/mastercoin-MSC/spec/issues/29 #
         #######################################################################
@@ -280,6 +279,8 @@ def parse_simple_basic(tx, tx_hash='unknown', after_bootstrap=True):
         info('invalid mastercoin tx ('+str(e)+') at tx '+tx_hash)
         return {'invalid':(True,'bad parsing'), 'tx_hash':tx_hash}
 
+# only pay-to-pubkey-hash inputs are allowed
+# the sender is largest contributor of the transaction
 def select_input_reference(inputs):
     inputs_values_dict={}
     for i in inputs:
@@ -299,10 +300,13 @@ def select_input_reference(inputs):
     # no valid input found
     if len(inputs_values_dict)==0:
         return None
-    # the intput reference is the one with the highest value
+    # the input reference is the one with the highest value
     from_address=max(inputs_values_dict, key=inputs_values_dict.get)
     return from_address
 
+# only non-exodus, pay-to-pubkey-hash outputs are considered
+# other output types are ignores, sender may not be the receiver
+# the receiver is derived from the last remaining output
 def select_receiver_reference(input_addr, outputs):
     to_address='unknown'
     sender_references=0    
@@ -322,15 +326,15 @@ def select_receiver_reference(input_addr, outputs):
     # strip change output
     elif remaining>1 and potential_recipients[-1]==input_addr:
         to_address=potential_recipients[-2]
-    return to_address        
+    return to_address
 
 def get_obfus_str_list(address, length):
-       obfus_str_list=[]
-       obfus_str_list.append(get_sha256(address)) # 1st obfus is simple sha256
-       for i in range(length):
-           if i<length-1: # one less obfus str is needed (the first was not counted)
-               obfus_str_list.append(get_sha256(obfus_str_list[i].upper())) # i'th obfus is sha256 of upper prev
-       return obfus_str_list
+    obfus_str_list=[]
+    obfus_str_list.append(get_sha256(address)) # 1st obfus is simple sha256
+    for i in range(length):
+        if i<length-1: # one less obfus str is needed (the first was not counted)
+            obfus_str_list.append(get_sha256(obfus_str_list[i].upper())) # i'th obfus is sha256 of upper prev
+    return obfus_str_list
 
 def parse_multisig(tx, tx_hash='unknown'):
     if multisig_disabled:
@@ -338,6 +342,8 @@ def parse_multisig(tx, tx_hash='unknown'):
         return {}
     parsed_json_tx=get_json_tx(tx)
     parse_dict={}
+    
+    # the sender is largest contributor of the transaction
     input_addr=select_input_reference(parsed_json_tx['inputs'])
     
     if input_addr == None:
@@ -351,6 +357,8 @@ def parse_multisig(tx, tx_hash='unknown'):
             if get_address_from_output(previous_output) != input_addr:
                 info('Bad multiple inputs on: '+tx_hash)
                 return {'tx_hash':tx_hash, 'invalid':(True, 'Bad multiple inputs')}
+                                      
+    # the receiver is not exodus and preferably not sender, not all tx types require a receiver
     all_outputs=parsed_json_tx['outputs']
     (outputs_list_no_exodus, outputs_to_exodus, different_outputs_values, invalid)=examine_outputs(all_outputs, tx_hash, tx)
     if invalid != None:
@@ -397,9 +405,6 @@ def parse_multisig(tx, tx_hash='unknown'):
 
             for i in range(list_length):
                 dataHex_deobfuscated_list.append(get_string_xor(data_script_list[i][2:-2],obfus_str_list[i][:62]).zfill(64)+'00')
-
-            # deobfuscated list is ready
-            #info(dataHex_deobfuscated_list)
 
             try:
                 data_dict=parse_data_script(dataHex_deobfuscated_list[0])
