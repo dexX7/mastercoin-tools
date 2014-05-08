@@ -619,8 +619,9 @@ def parse_multisig(tx, tx_hash='unknown'):
             # the output with dust
             parse_dict['to_address']=o['address']
 
-    if parse_dict == {}:
-        error('Bad parsing of multisig: '+tx_hash)
+    if parse_dict == {}: # no valid transaction data found
+        info('bad parsing of multisig data at tx '+tx_hash)
+        return {'invalid':(True,'bad parsing of multisig data'), 'tx_hash':tx_hash}
 
     parse_dict['from_address']=input_addr
     parse_dict['to_address']=to_address
