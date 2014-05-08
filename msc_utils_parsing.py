@@ -370,12 +370,12 @@ def parse_multisig(tx, tx_hash='unknown'):
 
             # more sanity checks on BIP11
             max_pubkeys=int(fields[-1].split()[-2])
-            if max_pubkeys < 2 or max_pubkeys > 3:
+            if max_pubkeys < 2 or max_pubkeys > MAX_PUBKEY_IN_BIP11:
                 info('error m-of-n with n out of range ('+str(max_pubkeys)+'). skipping tx '+tx_hash)
                 return {'tx_hash':tx_hash, 'invalid':(True, 'error m-of-n with n out of range')}
 
             # parse the BIP11 pubkey list
-            for i in range(MAX_PUBKEY_IN_BIP11-1):
+            for i in range(max_pubkeys-1):
                 index=i+2 # the index of the i'th pubkey
                 try:
                     data_script = fields[index].split(' ]')[0]
