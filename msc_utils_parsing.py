@@ -315,6 +315,9 @@ def select_receiver_reference(input_addr, outputs):
     for o in outputs:
         if is_script_paytopubkeyhash(o['script']):
             address=o['address']
+            # skip exodus outputs
+            if address==exodus_address:
+                continue
             # count outputs to sender
             if address==input_addr:
                 sender_references+=1
@@ -352,20 +355,16 @@ def parse_multisig(tx, tx_hash='unknown'):
                                       
     # the receiver is not exodus and preferably not sender, not all tx types require a receiver
     all_outputs=parsed_json_tx['outputs']
-    (outputs_list_no_exodus, outputs_to_exodus, different_outputs_values, invalid)=examine_outputs(all_outputs, tx_hash, tx)
-    if invalid != None:
-        info(str(invalid[1])+' on '+tx_hash)
-        return {'tx_hash':tx_hash, 'invalid':invalid}
-        
-    to_address=select_receiver_reference(input_addr, outputs_list_no_exodus)
+    to_address=select_receiver_reference(input_addr, all_outputs)
+    
+    # data packages are encoded in multisig outputs
+    potential_data_outputs=[output for output in all_outputs if is_script_multisig(output['script'])]
 
     data_script_list = []
-    for idx,o in enumerate(outputs_list_no_exodus):
+    for idx,o in enumerate(potential_data_outputs):
         if o['address']==None: # This should be the multisig
+            # extract obfuscated data packages
             script=o['script']
-            # verify that it is a multisig
-            if not script.endswith('checkmultisig'):
-                error('Bad multisig data script '+script)
             fields=script.split('[ ')
 
             # more sanity checks on BIP11
@@ -501,7 +500,7 @@ def parse_multisig(tx, tx_hash='unknown'):
                             parse_dict['formatted_fee']=bitcoin_dict['fee']
                         else:
                             if data_dict['transactionType'] == '0032' or data_dict['transactionType'] == '0033': # Smart Property
-                                if idx == len(outputs_list_no_exodus)-1: # we are on last output
+                                if idx == len(potential_data_outputs)-1: # we are on last output
                                     long_packet = ''
                                     for datahex in dataHex_deobfuscated_list:
                                         if len(datahex)<42:
@@ -614,10 +613,6 @@ def parse_multisig(tx, tx_hash='unknown'):
                                     parse_dict.pop('block_time_limit', None)
                                 else:
                                     return {'tx_hash':tx_hash, 'invalid':(True, 'non supported tx type '+data_dict['transactionType'])}
-
-        else: # not the multisig output
-            # the output with dust
-            parse_dict['to_address']=o['address']
 
     if parse_dict == {}: # no valid transaction data found
         info('bad parsing of multisig data at tx '+tx_hash)
