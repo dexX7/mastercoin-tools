@@ -349,14 +349,6 @@ def parse_multisig(tx, tx_hash='unknown'):
     if input_addr == None:
         info('invalid from address (address with largest value is None) or non-pay-to-pubkeyhash supplied at tx '+tx_hash)
         return {'invalid':(True,'address with largest value is None or non-pay-to-pubkeyhash supplied'), 'tx_hash':tx_hash}
-    for i in parsed_json_tx['inputs']:
-        previous_output=i['previous_output']
-        if input_addr == '':
-            input_addr=get_address_from_output(previous_output)
-        else:
-            if get_address_from_output(previous_output) != input_addr:
-                info('Bad multiple inputs on: '+tx_hash)
-                return {'tx_hash':tx_hash, 'invalid':(True, 'Bad multiple inputs')}
                                       
     # the receiver is not exodus and preferably not sender, not all tx types require a receiver
     all_outputs=parsed_json_tx['outputs']
@@ -395,10 +387,6 @@ def parse_multisig(tx, tx_hash='unknown'):
             # prepare place holder lists for obfus,deobfus,data_dict
             dataHex_deobfuscated_list=[]
             data_dict_list=[]
-
-            if input_addr == None:
-                info('none input address (BIP11 inputs are not supported yet)')
-                return {'tx_hash':tx_hash, 'invalid':(True, 'not supported input (BIP11/BIP16)')}
 
             list_length=len(data_script_list)
             obfus_str_list=get_obfus_str_list(input_addr, list_length)
