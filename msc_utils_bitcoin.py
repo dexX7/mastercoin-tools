@@ -38,58 +38,46 @@ def from_hex_satoshi(value):
     return formatted_decimal(float_number)
 
 def b58encode(v):
-  """ encode v, which is a string of bytes, to base58.
-"""
-
-  long_value = 0L
-  for (i, c) in enumerate(v[::-1]):
-    long_value += (256**i) * ord(c)
-
-  result = ''
-  while long_value >= __b58base:
-    div, mod = divmod(long_value, __b58base)
-    result = __b58chars[mod] + result
-    long_value = div
-  result = __b58chars[long_value] + result
-
-  # Bitcoin does a little leading-zero-compression:
-  # leading 0-bytes in the input become leading-1s
-  nPad = 0
-  for c in v:
-    if c == '\0': nPad += 1
-    else: break
-
-  return (__b58chars[0]*nPad) + result
-
+    """ encode v, which is a string of bytes, to base58. """
+    long_value = 0L
+    for (i, c) in enumerate(v[::-1]):
+        long_value += (256**i) * ord(c)
+    result = ''
+    while long_value >= __b58base:
+        div, mod = divmod(long_value, __b58base)
+        result = __b58chars[mod] + result
+        long_value = div
+    result = __b58chars[long_value] + result
+    # Bitcoin does a little leading-zero-compression:
+    # leading 0-bytes in the input become leading-1s
+    nPad = 0
+    for c in v:
+        if c == '\0': nPad += 1
+        else: break
+    return (__b58chars[0]*nPad) + result
 
 def b58decode(v, length):
-    """ decode v into a string of len bytes
-    """
+    """ decode v into a string of len bytes """
     long_value = 0L
     for (i, c) in enumerate(v[::-1]):
       long_value += __b58chars.find(c) * (__b58base**i)
-
     result = ''
     while long_value >= 256:
-      div, mod = divmod(long_value, 256)
-      result = chr(mod) + result
-      long_value = div
+        div, mod = divmod(long_value, 256)
+        result = chr(mod) + result
+        long_value = div
     result = chr(long_value) + result
-
     nPad = 0
     for c in v:
-      if c == __b58chars[0]: nPad += 1
-      else: break
-
+        if c == __b58chars[0]: nPad += 1
+        else: break
     result = chr(0)*nPad + result
     if length is not None and len(result) != length:
-      return None
-
+        return None
     return result
 
-
 def hash_160_to_bc_address(h160):
-    vh160 = "\x00"+h160  # \x00 is version 0
+    vh160 = '\x00'+h160 # \x00 is version 0
     h3=hashlib.sha256(hashlib.sha256(vh160).digest()).digest()
     addr=vh160+h3[0:4]
     return b58encode(addr)
@@ -101,15 +89,15 @@ def bc_address_to_hash_160(addr):
 def get_sha256(string):
     return hashlib.sha256(string).hexdigest()
 
-def is_script_multisig(output):
+def is_script_multisig(script):
     # check that the script looks like:
     # m [ pubkey1 ] .. [ hex ] n checkmultisig    
-    return output.endswith('checkmultisig')
+    return script.endswith('checkmultisig')
 
-def is_script_paytopubkeyhash(output):
+def is_script_paytopubkeyhash(script):
     # check that the script looks like:
     # dup hash160 [ hex ] equalverify checksig
-    return output.startswith('dup hash160') and output.endswith('equalverify checksig')
+    return script.startswith('dup hash160') and script.endswith('equalverify checksig')
         
 def is_pubkey_valid(pubkey):
     try:
@@ -131,10 +119,10 @@ def get_nearby_valid_pubkey(pubkey):
     valid_pubkey=pubkey
     l=len(pubkey)
     while not is_pubkey_valid(valid_pubkey):
-        info("trying "+valid_pubkey)
+        debug('trying '+valid_pubkey)
         next=hex(int(valid_pubkey, 16)+1).strip('L').split('0x')[1]
         valid_pubkey = next.zfill(l)
-    info("valid  "+valid_pubkey)
+    debug('valid '+valid_pubkey)
     return valid_pubkey
 
 def is_valid_hash(h):
@@ -148,8 +136,8 @@ def is_valid_hash(h):
 
 def is_valid_bitcoin_address(value):
     value = value.strip()
-    if re.match(r"[a-zA-Z1-9]{27,35}$", value) is None:
-      return False
+    if re.match(r'[a-zA-Z1-9]{27,35}$', value) is None:
+        return False
     version = get_bcaddress_version(value)
     if version != None:
         return True
