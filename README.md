@@ -1,5 +1,7 @@
-Bitcoin Core + mastercoin-tools
-===============================
+Bitcoin Core and mastercoin-tools
+=================================
+
+
 
 ### What is this branch? ###
 
@@ -17,7 +19,7 @@ This is the first attempt to find a solution inbetween.
 usage of Bitcoin Core
 * Confirmed to be working on Microsoft Windows 7 x64 (this was tested only)
 * Parsing and validating of all Mastercoin based transactions starting from block 249498 
-up to the current height of almost 300000 takes about 8 minutes on a cheaper VPS
+up to the current height of almost 300000 takes about **8 minutes** on a cheaper VPS
 
 ### How this is done ###
 
@@ -31,8 +33,10 @@ transactions associated with any address, but also to fetch any balance and all 
 of any address. 
 
 Based on that the sx wrapper of mastercoin-tools was adjusted so it is compatible with such a 
-Bitcoin client. Just to be clear: this is not mastercoind or a Bitcoin Core based Mastercoin 
-client, but simply the combination of an address-indexed Bitcoin branch and masttercoin-tools.
+Bitcoin client.
+
+Just to be clear: this is not mastercoind or a Bitcoin Core based Mastercoin client, but the 
+combination of an address-indexed Bitcoin branch and mastercoin-tools.
 
 ### Requirements and setup ###
 
@@ -40,8 +44,8 @@ Depending on your preferences there are two clients available: one based on the 
 of Bitcoin Core or one that is based on [release v0.9.1](https://github.com/dexX7/bitcoin/tree/0.9.1-addrindex-extended) which may be considered as less 
 "experimental" by some:
 
-https://github.com/dexX7/bitcoin/tree/0.9.1-addrindex-extended
-https://github.com/dexX7/bitcoin/tree/master-addrindex-extended
+* [/bitcoin/tree/0.9.1-addrindex-extended](https://github.com/dexX7/bitcoin/tree/0.9.1-addrindex-extended)
+* [/bitcoin/tree/master-addrindex-extended](https://github.com/dexX7/bitcoin/tree/master-addrindex-extended)
 
 Build instructions can be found in [/doc#building](https://github.com/dexX7/bitcoin/tree/0.9.1-addrindex-extended/doc#building). Once bitcoind or bitcoind and Bitcoin-Qt were 
 build, the client you may use at the moment could be replaced, if this is wanted. Bitcoin Core 
