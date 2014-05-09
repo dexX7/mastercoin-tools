@@ -122,10 +122,8 @@ def get_nearby_valid_pubkey(pubkey):
     valid_pubkey=pubkey
     l=len(pubkey)
     while not is_pubkey_valid(valid_pubkey):
-        debug('trying '+valid_pubkey)
         next=hex(int(valid_pubkey, 16)+1).strip('L').split('0x')[1]
         valid_pubkey = next.zfill(l)
-    debug('valid '+valid_pubkey)
     return valid_pubkey
 
 def is_valid_hash(h):
