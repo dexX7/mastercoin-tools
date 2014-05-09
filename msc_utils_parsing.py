@@ -11,7 +11,7 @@
 #######################################################
 
 import traceback,glob,json
-from msc_utils_obelisk import *
+from msc_utils_bitcoind import *
 
 currency_type_dict={'00000001':'Mastercoin','00000002':'Test Mastercoin'}
 reverse_currency_type_dict={'Mastercoin':'00000001','Test Mastercoin':'00000002'}
