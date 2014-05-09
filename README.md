@@ -19,7 +19,7 @@ This is the first attempt to find a solution inbetween.
 usage of Bitcoin Core
 * Confirmed to be working on Microsoft Windows 7 x64 (this was tested only)
 * Parsing and validating of all Mastercoin based transactions starting from block 249498 
-up to the current height of almost 300000 takes about **8 minutes** on a cheaper VPS
+up to the current height of almost 300000 takes about **8 minutes** on a cheap VPS
 
 ### How this is done ###
 
@@ -47,10 +47,11 @@ of Bitcoin Core or one that is based on [release v0.9.1](https://github.com/dexX
 * [/bitcoin/tree/0.9.1-addrindex-extended](https://github.com/dexX7/bitcoin/tree/0.9.1-addrindex-extended)
 * [/bitcoin/tree/master-addrindex-extended](https://github.com/dexX7/bitcoin/tree/master-addrindex-extended)
 
-Build instructions can be found in [/doc#building](https://github.com/dexX7/bitcoin/tree/0.9.1-addrindex-extended/doc#building). Once bitcoind or bitcoind and Bitcoin-Qt were 
-build, the client you may use at the moment could be replaced, if this is wanted. Bitcoin Core 
-needs to be started with the enabled address and transaction index as well as with an enabled RPC 
-interface. The bitcoin.conf could look like this:
+Build instructions can be found in [/bitcoin/../doc#building](https://github.com/dexX7/bitcoin/tree/0.9.1-addrindex-extended/doc#building). Once Bitcoin-Qt or bitcoind were 
+build, your current client may be replaced, if this is wanted. Bitcoin Core then needs to be 
+started with the enabled address and transaction index as well as with an enabled RPC interface.
+
+The bitcoin.conf could look like this:
 
 ```
 server=1
