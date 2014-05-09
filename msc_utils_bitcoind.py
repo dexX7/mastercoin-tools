@@ -1,4 +1,4 @@
-#!/usr/bin/python1
+#!/usr/bin/python
 
 ##########################################################################
 #                                                                        #
@@ -510,7 +510,7 @@ def pubkey(key):
     error('this method is not implemented')
 
 def get_utxo(addr, value):
-    # easy to do with rpc.getallbalance(addr)
+    # easy to do with rpc.listalltransactions(addr)
     error('this method is not implemented')
 
 def rawscript(script):
