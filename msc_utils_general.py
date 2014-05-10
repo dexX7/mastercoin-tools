@@ -19,6 +19,7 @@ import os
 import msc_globals
 
 LAST_BLOCK_NUMBER_FILE='last_block.txt'
+msc_globals.init()
 
 def run_command(command, input_str=None, ignore_stderr=False):
     if ignore_stderr:
@@ -65,12 +66,13 @@ def error(msg):
     exit(1)
 
 def info(msg):
-    func_name='unknown'
-    try:
-        func_name=inspect.stack()[1][3]
-    except IndexError:
-        pass
-    print '[I] '+func_name+': '+str(msg)
+    if msc_globals.s == False:
+        func_name='unknown'
+        try:
+            func_name=inspect.stack()[1][3]
+        except IndexError:
+            pass
+        print '[I] '+func_name+': '+str(msg)
 
 def debug(msg):
     if msc_globals.d == True:
