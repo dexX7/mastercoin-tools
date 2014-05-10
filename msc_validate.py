@@ -929,7 +929,8 @@ def generate_api_jsons():
         if msc_globals.D != None:
             if msc_globals.A != None:
                 pprint.pprint(addr_dict_api)
-            return True
+            else:
+                return True
         else:
             atomic_json_dump(addr_dict_api, 'addr/'+addr+'.json', add_brackets=False)
 
