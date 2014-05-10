@@ -11,7 +11,9 @@
 # globals.py
 
 def init():
+    global s # silent mode
     global last_block
     global d # debug mode
     last_block=0
     d=False
+    s=False
