@@ -34,7 +34,8 @@ def get_last_height():
         return out.strip()
 
 def get_block_timestamp(height):
-    print height
+    if msc_globals.s == False:
+        print height
     raw_block, err = run_command("sx fetch-block-header "+str(height))
     if err != None or raw_block == None:
         return (None, err)
@@ -97,7 +98,8 @@ def get_tx_index(tx_hash):
             index=s[3]
             if height=='failed:':
 		url='http://btc.blockr.io/api/v1/tx/info/' + tx_hash
-		print url
+                if msc_globals.s == False:
+                    print url
                 try:
                     height=requests.get(url).json()['data']['block']
                     return(height,-1)
