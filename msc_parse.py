@@ -98,6 +98,8 @@ def parse():
         # get all tx of exodus address
         history=get_history(exodus_address)
         history.sort(key=output_height)
+        # Oddly enough this next print statement corrects the parsing-behind bug
+        print "Last 5 transactions of Exodus", history[-5:]
     else:
         # build fake history of length 1 (debug purposes)
         json_tx=get_tx(single_tx)
