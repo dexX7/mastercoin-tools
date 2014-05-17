@@ -286,7 +286,7 @@ def validate_tx(filename):
         out = out.strip('\n')
         info('validated')
         info(out)
-        found_success = re.findall("Success",out)
+        found_success = re.findall("Success|input not found",out)
         if len(found_success) != 0:
             return None
         else:
