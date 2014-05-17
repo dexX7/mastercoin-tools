@@ -287,7 +287,7 @@ def validate_tx(filename):
         info('validated')
         info(out)
         found_success = re.findall("Success",out)
-        if found_success != 0:
+        if len(found_success) != 0:
             return None
         else:
             return out
@@ -309,7 +309,7 @@ def broadcast_tx(filename):
         info('broadcasted')
         info(out)
         found_success = re.findall("Success",out)
-        if found_success != 0:
+        if len(found_success) != 0:
             return None
         else:
             return out
