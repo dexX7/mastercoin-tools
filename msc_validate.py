@@ -13,6 +13,7 @@
 import os
 import sys
 import pprint
+import random
 from optparse import OptionParser
 from msc_utils_validating import *
 
@@ -1683,6 +1684,10 @@ def check_mastercoin_transaction(t, index=-1):
                         #earlybird_bonus = t['earlybirdBonus']
                         #percentage_for_issuer = t['percentageForIssuer']
                         
+                        #check and see if a coin exists with the same name
+                        if prop_name in property_type_dict:
+                            prop_name += '-' + str(int(random.random()*1e5))
+                            
                         # add symbol to dict
                         property_type_dict[prop_name]=property_type
                         coins_dict[prop_name]=str(prop_id)
