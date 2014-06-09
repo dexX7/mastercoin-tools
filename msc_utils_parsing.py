@@ -27,7 +27,7 @@ multisig_disabled=False
 dust_limit=5757
 MAX_PUBKEY_IN_BIP11=3
 MAX_COMMAND_TRIES=3
-features_enable_dict={'distributed exchange':290630}
+features_enable_dict={'distributed exchange':290630, 'p2sh':306000}
 LAST_VALIDATED_BLOCK_NUMBER_FILE='last_validated_block.txt'
 max_payment_timeframe=255
 
@@ -207,8 +207,12 @@ def parse_simple_basic(tx, tx_hash='unknown', after_bootstrap=True):
     # collect all "from addresses" (normally only a single one)
     from_address=''
     try:
+        # determine, if p2sh is enabled
+        (height,index)=get_tx_index(tx_hash)
+        p2sh_enabled=(int(height)>=features_enable_dict['p2sh'])
+        
         # the from address is the one with the highest value
-        from_address=select_input_reference(json_tx['inputs'])
+        from_address=select_input_reference(json_tx['inputs'], p2sh_enabled)
 
         if from_address == None:
             info('invalid from address (address with largest value is None) at tx '+tx_hash)
@@ -279,17 +283,18 @@ def parse_simple_basic(tx, tx_hash='unknown', after_bootstrap=True):
         info('invalid mastercoin tx ('+str(e)+') at tx '+tx_hash)
         return {'invalid':(True,'bad parsing'), 'tx_hash':tx_hash}
 
-# only pay-to-pubkey-hash inputs are allowed
+# only pay-to-pubkey-hash and p2sh inputs may be allowed
 # the sender is largest contributor of the transaction
-def select_input_reference(inputs):
+def select_input_reference(inputs, p2sh_enabled=False):
     inputs_values_dict={}
     for i in inputs:
         prev_output=get_vout_from_output(i['previous_output'])
         # skip, if input is not usable
         if prev_output==None:
             continue
-        # skip, if input is not pay-to-pubkey-hash
+        # skip, if input is not pay-to-pubkey-hash and not suitable for p2sh
         if not is_script_paytopubkeyhash(prev_output['script']):
+            if p2sh_enabled
             return None
         input_value=prev_output['value']
         input_address=i['address']
@@ -304,16 +309,16 @@ def select_input_reference(inputs):
     from_address=max(inputs_values_dict, key=inputs_values_dict.get)
     return from_address
 
-# only non-exodus, pay-to-pubkey-hash outputs are considered
-# other output types are ignores, sender may not be the receiver
+# only non-exodus, pay-to-pubkey-hash and p2sh outputs are considered 
+# and other output types are ignores, sender may not be the receiver
 # the receiver is derived from the last remaining output
-def select_receiver_reference(input_addr, outputs):
+def select_receiver_reference(input_addr, outputs, p2sh_enabled=False):
     to_address='unknown'
     sender_references=0    
     # filter outputs to consider only pay-to-pubkey-hash outputs
     potential_recipients=[]
     for o in outputs:
-        if is_script_paytopubkeyhash(o['script']):
+        if is_script_paytopubkeyhash(o['script']) or (p2sh_enabled and is_script_p2sh(o['script']):
             address=o['address']
             # skip exodus outputs
             if address==exodus_address:
@@ -346,8 +351,12 @@ def parse_multisig(tx, tx_hash='unknown'):
     parsed_json_tx=get_json_tx(tx)
     parse_dict={}
     
+    # determine, if p2sh is enabled
+    (height,index)=get_tx_index(tx_hash)
+    p2sh_enabled=(int(height)>=features_enable_dict['p2sh'])
+    
     # the sender is largest contributor of the transaction
-    input_addr=select_input_reference(parsed_json_tx['inputs'])
+    input_addr=select_input_reference(parsed_json_tx['inputs'], p2sh_enabled)
     
     if input_addr == None:
         info('invalid from address (address with largest value is None) or non-pay-to-pubkeyhash supplied at tx '+tx_hash)
@@ -355,7 +364,7 @@ def parse_multisig(tx, tx_hash='unknown'):
                                       
     # the receiver is not exodus and preferably not sender, not all tx types require a receiver
     all_outputs=parsed_json_tx['outputs']
-    to_address=select_receiver_reference(input_addr, all_outputs)
+    to_address=select_receiver_reference(input_addr, all_outputs, p2sh_enabled)
     
     # data packages are encoded in multisig outputs
     potential_data_outputs=[output for output in all_outputs if is_script_multisig(output['script'])]
@@ -628,10 +637,15 @@ def examine_outputs(outputs_list, tx_hash, raw_tx):
         outputs_list_no_exodus=[]
         outputs_to_exodus=[]
         different_outputs_values={}
+        # height is used to determine, if p2sh is enabled
+        (height,index)=get_tx_index(tx_hash)
+        p2sh_enabled=(int(height)>=features_enable_dict['p2sh'])
         for o in outputs_list:
             # ignore outputs which are not pay-to-pubkey-hash or multisig
             if not (is_script_paytopubkeyhash(o['script']) or is_script_multisig(o['script'])):
-                continue
+                # check, if output is suitable as p2sh
+                if not (p2sh_enabled or is_script_p2sh(o['script'])):
+                    continue
             if o['address']!=exodus_address:
                 outputs_list_no_exodus.append(o)
             else:
