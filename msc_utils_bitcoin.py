@@ -76,8 +76,10 @@ def b58decode(v, length):
         return None
     return result
 
-def hash_160_to_bc_address(h160):
-    vh160 = '\x00'+h160 # \x00 is version 0
+def hash_160_to_bc_address(h160, prefix='\x00'):
+    # prefix 0: mainnet pubkey hash (starts with 1)
+    # prefix 5: mainnet script hash (starts with 3)
+    vh160 = prefix+h160
     h3=hashlib.sha256(hashlib.sha256(vh160).digest()).digest()
     addr=vh160+h3[0:4]
     return b58encode(addr)
@@ -98,6 +100,11 @@ def is_script_paytopubkeyhash(script):
     # check that the script looks like:
     # dup hash160 [ hex ] equalverify checksig
     return script.startswith('dup hash160') and script.endswith('equalverify checksig')
+    
+def is_script_p2sh(script):
+    # check that the script looks like:
+    # hash160 [ hex ] equal
+    return script.startswith('hash160') and script.endswith('equal')
         
 def is_pubkey_valid(pubkey):
     try:
