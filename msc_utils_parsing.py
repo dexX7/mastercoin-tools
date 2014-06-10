@@ -294,8 +294,8 @@ def select_input_reference(inputs, p2sh_enabled=False):
             continue
         # skip, if input is not pay-to-pubkey-hash and not suitable for p2sh
         if not is_script_paytopubkeyhash(prev_output['script']):
-            if p2sh_enabled
-            return None
+            if not (p2sh_enabled and is_script_p2sh(o['script'])):
+                return None
         input_value=prev_output['value']
         input_address=i['address']
         if inputs_values_dict.has_key(input_address):
